@@ -24,7 +24,8 @@ It allows users to see products, manage carts, and authenticate in the applicati
 - You have now the application running and ready to use.
 
 ## Usage
-See the API Documentation while the application is running to see the available routes with this [link](localhost:3000/api)
+See the API Documentation for more information about what you can do with this application.<br>
+While the application is running go to this link: http://localhost:3000/api
 
 
 ## Entity Relation Diagram
