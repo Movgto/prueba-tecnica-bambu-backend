@@ -25,7 +25,9 @@ It allows users to see products, manage carts, and authenticate in the applicati
 
 ## Usage
 See the API Documentation for more information about what you can do with this application.<br>
-While the application is running go to this link: http://localhost:3000/api
+While the application is running go to this link: http://localhost:3000/api<br>
+
+Or visit the postman documentation [here](https://documenter.getpostman.com/view/32930294/2sB3B8rCkP)
 
 
 ## Entity Relation Diagram
