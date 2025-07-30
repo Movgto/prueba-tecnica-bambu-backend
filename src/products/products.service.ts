@@ -1,56 +1,54 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, Scope } from '@nestjs/common';
-import { v4 } from 'uuid'
+import { BadRequestException, ConsoleLogger, Injectable, InternalServerErrorException, Logger, NotFoundException, Scope } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto';
-import { Product } from './entities/product.entity';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { PrismaService } from 'src/common/prisma/prisma.service';
+import { Prisma } from 'generated/prisma/client';
+import { QueryParamsDto } from './dto/query-params.dto';
 
 @Injectable()
 export class ProductsService {
 
+    private _logger = new ConsoleLogger(ProductsService.name);
+
     constructor(
-        @InjectModel(Product.name)
-        private readonly _productModel: Model<Product>,
+        // @InjectModel(Product.name)
+        // private readonly _productModel: Model<Product>,
+        private readonly _prisma: PrismaService,
         private readonly _httpService: HttpService
     ) { }
 
-    findAll() {
-        return this._productModel.find();
-    }
+    async findAll(queryParams?: QueryParamsDto) {
+        // return this._productModel.find();
+        const brand = queryParams?.brand?.replace(/_/g, ' ').trim();
 
-    findById(id: string) {
-        return 'This action should retrieve a product from the DB with the provided Id, NOT YET IMPLEMENTED';
-    }
-
-    async create(product: CreateProductDto) {
-        try {
-            const newProduct = await this._productModel.create(product);
-
-            return newProduct
-
-        } catch (error) {
-            console.error(error);
-
-            if (error.code === 11000) {
-                throw new BadRequestException(`There's already a product with a property that is not allowed to be repeated: ${JSON.stringify(error.keyValue)}`)
+        const allProducts = await this._prisma.product.findMany({
+            where: {
+                brand,
+                category: queryParams?.category
             }
+        });
 
-            throw new InternalServerErrorException('Something went wrong when creating a new product, check logs.');
-        }
+        this._logger.log('GET /products');
+
+        return allProducts;
     }
 
-    update(id: string, product: UpdateProductDto) {
+    async findById(id: number) {
+        const product = await this._prisma.product.findUnique({
+            where: {
+                id
+            }
+        })
+
+        if (!product) {
+            this._logger.error(`Could't find a product with Id ${id}`);
+            throw new NotFoundException(`Product with id ${id} was not found.`)
+        }
 
         return product;
-    }
-
-    deleteById(id: string) {
-        return 'This action deletes a product from the DB, NOT YET IMPLEMENTED';
-    }
-
+    }           
 
     async syncProducts() {
 
@@ -60,7 +58,7 @@ export class ProductsService {
             const { data: { products: productsRaw } } = await lastValueFrom(this._httpService.get('https://dummyjson.com/products?limit=0'));            
 
             // Creates a new array of products taking only the necessary data
-            const products: CreateProductDto[] = productsRaw.map(p => ({
+            const products: Prisma.ProductCreateInput[] = productsRaw.map(p => ({
                 title: p.title,
                 description: p.description,
                 price: p.price,
@@ -70,22 +68,19 @@ export class ProductsService {
 
             // Updates the existing products if it matches with the name, if there is no match creates a new product
             // and adds it to the database.
-            products.forEach(async p => {
-                await this._productModel.updateOne(
-                    {
-                        title: p.title
-                    },
-                    p,
-                    {
-                        upsert: true
-                    }
-                )
-            })
+            const promises = products.map(p => 
+                this._prisma.product.upsert({
+                    where: { title: p.title },
+                    update: p,
+                    create: p
+                })
+            )       
 
-            console.log('The database has been synchronized successfully');
+            await Promise.all(promises);
 
+            this._logger.log('The database has been syncronized!');
         } catch (error) {
-            console.error(error);
+            this._logger.error(`An error ocurred while trying to synchronize the DB. ${error}`);
 
             throw new InternalServerErrorException('Something went wrong with this request, please check the logs for more info.');
         }

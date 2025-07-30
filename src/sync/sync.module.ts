@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { ProductsModule } from "src/products/products.module";
 import { SyncService } from "./sync.service";
 import { SyncController } from "./sync.controller";
+import { AuthModule } from "src/auth/auth.module";
 
 @Module({
     controllers: [
@@ -11,7 +12,8 @@ import { SyncController } from "./sync.controller";
         SyncService
     ],
     imports: [
-        ProductsModule
+        ProductsModule,
+        AuthModule
     ]
 })
 export class SyncModule {}
