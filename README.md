@@ -26,3 +26,6 @@ It allows users to see products, manage carts, and authenticate in the applicati
 ## Usage
 See the API Documentation while the application is running to see the available routes with this [link](localhost:3000/api)
 
+
+## Entity Relation Diagram
+![Entity Relation Diagram](./ERD.svg)
