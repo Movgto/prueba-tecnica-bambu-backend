@@ -13,6 +13,8 @@ export class QueryParamsDto {
     @ApiProperty({
         required: false
     })
+
+    @ApiProperty()
     @IsString()
     @IsOptional()
     readonly category?: string;

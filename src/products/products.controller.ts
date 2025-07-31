@@ -24,7 +24,7 @@ export class ProductsController {
         type: [ProductResponseDto]
     })
     @ApiQuery({
-        schema: { $ref: getSchemaPath(QueryParamsDto)},
+        type: QueryParamsDto,
         required: false
     })
     @Get()
