@@ -22,11 +22,7 @@ export class ProductsController {
         status: 200,
         description: 'List of products.',
         type: [ProductResponseDto]
-    })
-    @ApiQuery({
-        type: QueryParamsDto,
-        required: false
-    })
+    })  
     @Get()
     getAllProducts(        
         @Query() queryParamsDto: QueryParamsDto
